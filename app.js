@@ -379,7 +379,16 @@ new MutationObserver(() => { if (!$("view-drive").classList.contains("active")) 
   .observe($("view-drive"), { attributes: true, attributeFilter: ["class"] });
 
 // ---------- PWA ----------
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((reg) => reg.update()).catch(() => {});
+  // 새 버전이 설치되면 한 번 자동 새로고침 (레슨 중에는 하지 않음)
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloaded || S.active) return;
+    reloaded = true; location.reload();
+  });
+}
 
 // 처음 연 사람(키 없음)은 바로 시작하기 도우미로
 go(settings().key ? "home" : "setup");
