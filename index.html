@@ -28,15 +28,17 @@
       <div><b id="stat-phrases">0</b><span>저장 표현</span></div>
     </div>
 
+    <div id="key-warning" class="card onboard hidden">
+      <b>👋 처음 오셨네요!</b>
+      <p>무료 API 키만 넣으면 바로 쓸 수 있어요. 1분이면 돼요.</p>
+      <button class="big-btn" data-go="setup">🔑 1분 만에 시작하기</button>
+    </div>
+
     <div class="card today">
       <div class="label">오늘의 상황</div>
       <div id="today-title" class="title"></div>
       <div id="today-goal" class="goal"></div>
       <button id="btn-start-today" class="big-btn">▶ 오늘 레슨 시작</button>
-    </div>
-
-    <div id="key-warning" class="card warn hidden">
-      Gemini API 키(무료)가 아직 없어요. <a href="#" data-go="settings">설정</a>에서 먼저 입력해 주세요.
     </div>
 
     <h2>다른 상황 고르기</h2>
@@ -45,8 +47,52 @@
     <button id="btn-review-quiz" class="wide-btn">🔁 저장한 표현 복습 퀴즈</button>
     <button class="wide-btn ghost" data-go="review">📒 표현 노트 · 지난 대화</button>
 
+    <button id="btn-share" class="wide-btn ghost">💌 친구에게 앱 공유하기</button>
+
     <p class="tip">출발 전에 시작 버튼만 누르고 거치대에 두세요. 그다음은 전부 음성으로 진행돼요.<br>
       말로 하는 명령: <b>“다시”</b> · <b>“천천히”</b> · <b>“잠깐만”</b> · <b>“무슨 뜻이야?”</b> · <b>“끝내자”</b></p>
+  </section>
+
+  <!-- 처음 설정 (지인용 온보딩) -->
+  <section id="view-setup" class="view">
+    <header class="top">
+      <button class="icon-btn" data-go="home" aria-label="뒤로">←</button>
+      <h1>시작하기</h1>
+      <span></span>
+    </header>
+
+    <div id="step-install" class="card step hidden">
+      <div class="step-no">먼저!</div>
+      <b>홈 화면에 앱으로 추가해 주세요</b>
+      <p id="install-guide"></p>
+      <small>홈 화면 앱과 사파리는 저장 공간이 따로라서, <b>홈 화면 아이콘으로 연 다음</b> 키를 넣어야 해요.</small>
+    </div>
+
+    <div class="card step">
+      <div class="step-no">1</div>
+      <b>무료 API 키 받기</b>
+      <p>구글 계정으로 로그인 → <b>“Create API key”</b>(API 키 만들기) → 만들어진 키 옆 <b>복사</b> 버튼을 누르세요.</p>
+      <a class="big-btn link-btn" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">🔑 무료 키 받으러 가기</a>
+      <small>결제 카드를 등록하지 않으면 요금이 나오지 않아요.</small>
+    </div>
+
+    <div class="card step">
+      <div class="step-no">2</div>
+      <b>복사한 키를 붙여넣기</b>
+      <p>키를 복사했으면 이 앱으로 돌아와서 아래 버튼을 누르세요. (아이폰은 “붙여넣기” 말풍선이 뜨면 한 번 더 눌러주세요)</p>
+      <button id="btn-paste-key" class="big-btn">📋 붙여넣기</button>
+      <input id="setup-key" type="password" autocomplete="off" placeholder="또는 여기에 직접 붙여넣기 (AIza…)" />
+      <button id="btn-show-key" class="text-btn">키 보기</button>
+      <div id="setup-msg" class="msg"></div>
+    </div>
+
+    <div id="setup-done" class="card step done hidden">
+      <b>✅ 준비 끝!</b>
+      <p>이제 출발 전에 “오늘 레슨 시작”만 누르면 돼요. 처음 한 번은 마이크 권한을 허용해 주세요.</p>
+      <button class="big-btn" data-go="home">🚗 시작하러 가기</button>
+    </div>
+
+    <p class="tip">🔒 키는 이 폰 안에만 저장되고 어디에도 전송·공유되지 않아요(구글 서버와 직접 통신). 무료 등급 대화 내용은 구글 서비스 개선에 쓰일 수 있어요.</p>
   </section>
 
   <!-- 운전 모드 -->
@@ -124,6 +170,7 @@
     </label>
     <button id="btn-save-settings" class="big-btn">저장</button>
     <button id="btn-test-key" class="wide-btn ghost">🔌 API 키 연결 테스트</button>
+    <button class="wide-btn ghost" data-go="setup">🔑 키 발급·붙여넣기 도우미</button>
     <div id="settings-msg" class="msg"></div>
     <button id="btn-clear-data" class="wide-btn danger">기록 전체 삭제</button>
   </section>

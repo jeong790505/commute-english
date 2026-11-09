@@ -31,6 +31,7 @@ function go(view) {
   if (view === "home") renderHome();
   if (view === "review") renderReview();
   if (view === "settings") renderSettings();
+  if (view === "setup") renderSetup();
 }
 document.addEventListener("click", (e) => {
   const t = e.target.closest("[data-go]");
@@ -71,6 +72,73 @@ $("btn-review-quiz").onclick = () => {
   const pool = phrases();
   const pick = pool.slice(0, 30).sort(() => Math.random() - 0.5).slice(0, 8);
   startLesson({ id: "review", ko: "복습 퀴즈", en: "Review quiz" }, pick);
+};
+
+// ---------- 처음 설정 (키 발급·붙여넣기 도우미) ----------
+const isStandalone = () => window.navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+function renderSetup() {
+  const showInstall = !isStandalone() && /Mobi|iPhone|Android/.test(navigator.userAgent);
+  $("step-install").classList.toggle("hidden", !showInstall);
+  $("install-guide").innerHTML = isIOS()
+    ? "사파리 아래쪽 <b>공유 버튼(□↑)</b> → <b>“홈 화면에 추가”</b> → 홈 화면의 <b>출근영어</b> 아이콘으로 다시 열기"
+    : "브라우저 메뉴(⋮) → <b>“홈 화면에 추가”</b> 또는 <b>“앱 설치”</b> → 홈 화면 아이콘으로 다시 열기";
+  const has = !!settings().key;
+  $("setup-key").value = settings().key;
+  $("setup-done").classList.toggle("hidden", !has);
+  setSetupMsg(has ? "이미 키가 저장돼 있어요. 바꾸려면 새 키를 붙여넣으세요." : "", "");
+}
+function setSetupMsg(text, kind) { const m = $("setup-msg"); m.textContent = text; m.className = "msg " + (kind || ""); }
+
+function extractKey(text) {
+  const t = (text || "").trim();
+  const m = t.match(/AIza[0-9A-Za-z_\-]{20,}/); // 구글 API 키 형식
+  return m ? m[0] : t.replace(/\s+/g, "");
+}
+
+async function saveKeyFromSetup(raw) {
+  const key = extractKey(raw);
+  if (!key) return setSetupMsg("키가 비어 있어요. 먼저 1번에서 키를 복사해 주세요.", "err");
+  $("setup-key").value = key;
+  if (!key.startsWith("AIza")) setSetupMsg("구글 키는 보통 AIza로 시작해요. 확인 중…", "");
+  else setSetupMsg("키 확인 중…", "");
+  try {
+    await testKey(key, settings().model);
+    store.set("settings", { ...settings(), key });
+    setSetupMsg("✅ 키 확인 완료! 저장했어요.", "ok");
+    $("setup-done").classList.remove("hidden");
+    $("setup-done").scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (err) {
+    setSetupMsg("❌ " + err.message + "\n키 전체가 복사됐는지 확인하고 다시 시도해 주세요.", "err");
+  }
+}
+
+$("btn-paste-key").onclick = async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    await saveKeyFromSetup(text);
+  } catch {
+    $("setup-key").focus();
+    setSetupMsg("자동 붙여넣기가 막혀 있어요. 아래 칸을 길게 눌러 ‘붙여넣기’ 해주세요.", "err");
+  }
+};
+$("setup-key").addEventListener("input", (e) => {
+  if (extractKey(e.target.value).length >= 30) saveKeyFromSetup(e.target.value);
+});
+$("btn-show-key").onclick = () => {
+  const i = $("setup-key"); const show = i.type === "password";
+  i.type = show ? "text" : "password"; $("btn-show-key").textContent = show ? "키 숨기기" : "키 보기";
+};
+
+// ---------- 친구에게 공유 ----------
+$("btn-share").onclick = async () => {
+  const url = location.origin + location.pathname;
+  const text = "출퇴근 운전하면서 AI랑 영어회화 연습하는 무료 앱이에요. 링크 열고 ‘홈 화면에 추가’ 한 다음 시작하기 누르면 돼요!";
+  try {
+    if (navigator.share) await navigator.share({ title: "출근영어", text, url });
+    else { await navigator.clipboard.writeText(`${text}\n${url}`); alert("링크를 복사했어요. 카톡에 붙여넣어 보내세요!"); }
+  } catch {}
 };
 
 // ---------- 설정 ----------
@@ -175,7 +243,7 @@ function fmt(sec) { return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${S
 
 async function startLesson(scenario, reviewPhrases = []) {
   const s = settings();
-  if (!s.key) { go("settings"); $("settings-msg").textContent = "먼저 Gemini API 키를 넣어주세요."; return; }
+  if (!s.key) { go("setup"); return; }
   chime.start(); // 사용자 탭 안에서 오디오 잠금 해제
   Object.assign(S, {
     scenario, s, transcript: [], startedAt: Date.now(), elapsed: 0,
@@ -313,4 +381,5 @@ new MutationObserver(() => { if (!$("view-drive").classList.contains("active")) 
 // ---------- PWA ----------
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-go("home");
+// 처음 연 사람(키 없음)은 바로 시작하기 도우미로
+go(settings().key ? "home" : "setup");
