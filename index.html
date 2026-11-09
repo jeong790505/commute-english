@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f17" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="출근영어" />
+  <title>출근영어 · Drive English</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 홈 -->
+  <section id="view-home" class="view active">
+    <header class="top">
+      <h1>출근영어 🚗</h1>
+      <button class="icon-btn" data-go="settings" aria-label="설정">⚙️</button>
+    </header>
+
+    <div class="stats">
+      <div><b id="stat-streak">0</b><span>연속 일수</span></div>
+      <div><b id="stat-minutes">0</b><span>누적 분</span></div>
+      <div><b id="stat-phrases">0</b><span>저장 표현</span></div>
+    </div>
+
+    <div class="card today">
+      <div class="label">오늘의 상황</div>
+      <div id="today-title" class="title"></div>
+      <div id="today-goal" class="goal"></div>
+      <button id="btn-start-today" class="big-btn">▶ 오늘 레슨 시작</button>
+    </div>
+
+    <div id="key-warning" class="card warn hidden">
+      Gemini API 키(무료)가 아직 없어요. <a href="#" data-go="settings">설정</a>에서 먼저 입력해 주세요.
+    </div>
+
+    <h2>다른 상황 고르기</h2>
+    <div id="scenario-list" class="chips"></div>
+
+    <button id="btn-review-quiz" class="wide-btn">🔁 저장한 표현 복습 퀴즈</button>
+    <button class="wide-btn ghost" data-go="review">📒 표현 노트 · 지난 대화</button>
+
+    <p class="tip">출발 전에 시작 버튼만 누르고 거치대에 두세요. 그다음은 전부 음성으로 진행돼요.<br>
+      말로 하는 명령: <b>“다시”</b> · <b>“천천히”</b> · <b>“잠깐만”</b> · <b>“무슨 뜻이야?”</b> · <b>“끝내자”</b></p>
+  </section>
+
+  <!-- 운전 모드 -->
+  <section id="view-drive" class="view drive">
+    <div class="drive-top">
+      <span id="drive-topic"></span>
+      <span id="drive-timer">00:00</span>
+    </div>
+    <div class="drive-center">
+      <div id="drive-orb" class="orb"></div>
+      <div id="drive-status" class="drive-status">연결 중…</div>
+      <div id="drive-caption" class="drive-caption"></div>
+    </div>
+    <button id="btn-stop" class="stop-btn">■ 종료</button>
+  </section>
+
+  <!-- 복습 -->
+  <section id="view-review" class="view">
+    <header class="top">
+      <button class="icon-btn" data-go="home" aria-label="뒤로">←</button>
+      <h1>표현 노트</h1>
+      <span></span>
+    </header>
+    <div id="last-session" class="card hidden"></div>
+    <h2>저장한 표현 <small id="phrase-count"></small></h2>
+    <ul id="phrase-list" class="phrase-list"></ul>
+    <h2>지난 대화</h2>
+    <div id="session-list"></div>
+  </section>
+
+  <!-- 설정 -->
+  <section id="view-settings" class="view">
+    <header class="top">
+      <button class="icon-btn" data-go="home" aria-label="뒤로">←</button>
+      <h1>설정</h1>
+      <span></span>
+    </header>
+    <label>Gemini API 키 (무료)
+      <input id="set-key" type="password" autocomplete="off" placeholder="AIza..." />
+      <small>aistudio.google.com → Get API key 에서 무료로 발급. 결제 정보를 등록하지 않으면 무료 등급이라 요금이 나오지 않아요(무료 등급 대화는 구글 서비스 개선에 쓰일 수 있음). 이 폰의 브라우저에만 저장돼요.</small>
+    </label>
+    <label>한 번 레슨 시간
+      <select id="set-minutes">
+        <option value="5">5분</option><option value="10">10분</option>
+        <option value="15">15분</option><option value="20">20분</option>
+        <option value="30">30분</option>
+      </select>
+    </label>
+    <label>말하기 속도
+      <select id="set-pace">
+        <option value="veryslow">아주 천천히</option>
+        <option value="slow">천천히 (추천)</option>
+        <option value="normal">보통</option>
+      </select>
+    </label>
+    <label>한국어 도움
+      <select id="set-help">
+        <option value="high">많이 (완전 초급)</option>
+        <option value="mid">필요할 때만</option>
+        <option value="low">거의 영어로만</option>
+      </select>
+    </label>
+    <label>목소리
+      <select id="set-voice">
+        <option value="Kore">Kore (여성, 또렷함)</option>
+        <option value="Aoede">Aoede (여성, 부드러움)</option>
+        <option value="Leda">Leda (여성, 밝음)</option>
+        <option value="Puck">Puck (남성, 경쾌함)</option>
+        <option value="Charon">Charon (남성, 차분함)</option>
+      </select>
+    </label>
+    <label>모델
+      <input id="set-model" type="text" autocomplete="off" />
+      <small>기본값 gemini-3.8-live. 바꿀 일 거의 없어요.</small>
+    </label>
+    <button id="btn-save-settings" class="big-btn">저장</button>
+    <button id="btn-test-key" class="wide-btn ghost">🔌 API 키 연결 테스트</button>
+    <div id="settings-msg" class="msg"></div>
+    <button id="btn-clear-data" class="wide-btn danger">기록 전체 삭제</button>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
