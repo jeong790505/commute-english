@@ -1,5 +1,5 @@
 // 앱 화면은 오프라인에서도 열리도록 캐시 (AI 대화 자체는 인터넷 필요)
-const CACHE = "drive-english-v4";
+const CACHE = "drive-english-v5";
 const ASSETS = ["./", "index.html", "style.css", "app.js", "prompt.js", "scenarios.js", "gemini.js",
   "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
