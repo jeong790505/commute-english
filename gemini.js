@@ -76,7 +76,9 @@ export class LiveSession {
     this.node.connect(mute).connect(this.ctx.destination);
   }
 
-  get aiSpeaking() { return this.ctx && this.ctx.currentTime < this.lastAudioEnd + 0.35; }
+  // 스피커(특히 차량 블루투스)는 실제 소리가 늦게 나오므로 그만큼 더 기다렸다가 마이크를 연다
+  get echoTail() { return 0.5 + Math.min(this.ctx?.outputLatency || 0, 0.6); }
+  get aiSpeaking() { return this.ctx && this.ctx.currentTime < this.lastAudioEnd + this.echoTail; }
 
   onMicChunk({ pcm }) {
     if (!this.ready || this.ws?.readyState !== 1) return;
@@ -85,7 +87,17 @@ export class LiveSession {
     this.ws.send(JSON.stringify({ realtimeInput: { audio: { data: b64FromBuf(pcm), mimeType: "audio/pcm;rate=16000" } } }));
   }
 
-  connect(isResume = false) {
+  // 서버가 새 도구 옵션(behavior/scheduling)을 거부하면 옵션 없이 한 번 더 시도
+  async connect(isResume = false) {
+    try { return await this._connect(isResume); }
+    catch (err) {
+      if (this.plainTools || !/behavior|scheduling|non_blocking|unknown name|invalid json|invalid argument/i.test(err.message || "")) throw err;
+      this.plainTools = true;
+      return this._connect(isResume);
+    }
+  }
+
+  _connect(isResume = false) {
     this.ready = false;
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(`${WS_URL}?key=${encodeURIComponent(this.key)}`);
@@ -99,7 +111,7 @@ export class LiveSession {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: this.voice } } },
           },
           systemInstruction: { parts: [{ text: this.instructions }] },
-          tools: [{ functionDeclarations: this.tools }],
+          tools: [{ functionDeclarations: this.plainTools ? this.tools.map(({ behavior, ...t }) => t) : this.tools }],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           realtimeInputConfig: {
@@ -143,7 +155,9 @@ export class LiveSession {
       const responses = [];
       for (const fc of msg.toolCall.functionCalls) {
         this.cb.onTool?.(fc.name, fc.args || {});
-        responses.push({ id: fc.id, name: fc.name, response: { result: "ok" } });
+        // SILENT: 결과만 기록하고 선생님이 이어서 말하지 않게 함.
+        // (기본값 WHEN_IDLE은 도구 응답이 올 때마다 새 발화를 유도 → 학습자 대답을 안 기다리고 혼자 진행)
+        responses.push({ id: fc.id, name: fc.name, response: { result: "ok" }, ...(this.plainTools ? {} : { scheduling: "SILENT" }) });
       }
       this.ws?.readyState === 1 && this.ws.send(JSON.stringify({ toolResponse: { functionResponses: responses } }));
     }

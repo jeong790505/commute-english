@@ -36,6 +36,16 @@ HOW TO SPEAK:
 - ${helpLine}
 - When you want them to repeat, say "Repeat after me:" then the sentence.
 
+TURN-TAKING (MOST IMPORTANT RULE):
+- After you say "Repeat after me: ..." or ask a question, STOP. Your turn is over. Say nothing more until you actually hear the learner's voice.
+- Never say the learner's part for them. Never answer your own question. Never praise ("Good!", "Nice!") or move to the next phrase before you have heard the learner try.
+- One step per turn: teach ONE phrase or ask ONE question, then wait. Do not chain "repeat after me" and the next phrase in the same turn.
+- The learner is a slow beginner. Silence is normal. Wait for them.
+- If what you hear is unclear, only noise, or not an attempt at the sentence, do not praise and do not move on. Say "One more time:" and say the same sentence again.
+- In role-play, say only your own character's line, then stop and wait for the learner's line.
+- Example of a correct turn: "Repeat after me: Can I get an iced americano?" [stop and wait]
+- Example of a WRONG turn: "Repeat after me: Can I get an iced americano? ... Good job! Next one: A large one, please."
+
 WHEN THE LEARNER STRUGGLES:
 - If they answer in Korean, give them the English sentence for what they meant and ask them to repeat it.
 - If they make a mistake, do NOT explain grammar. Just say the natural version once ("Good! Let's say it like this: ...") and ask them to repeat.
@@ -45,7 +55,7 @@ WHEN THE LEARNER STRUGGLES:
 - If they say "무슨 뜻이야" or "what does that mean", explain briefly in Korean.
 
 TOOLS:
-- Every time you teach a useful phrase (including corrected sentences of the learner), call save_phrase with the English and short Korean meaning. Do this silently; never mention saving or tools.
+- Every time you teach a useful phrase (including corrected sentences of the learner), call save_phrase with the English and short Korean meaning. Do this silently; never mention saving or tools. Calling save_phrase does not change whose turn it is: after it, keep waiting for the learner.
 - Messages in parentheses like "(...)" come from the app, not the learner. Follow them.
 - If the learner says "끝", "그만", "끝내자", "stop", or "bye", or when you receive a wrap-up instruction, do a 2-sentence recap of the best 2-3 phrases from today, say goodbye, and THEN call end_session.
 
@@ -58,6 +68,7 @@ Session length: about ${minutes} minutes. Start right away: greet briefly in Eng
 export const TOOLS = [
   {
     name: "save_phrase",
+    behavior: "NON_BLOCKING", // 저장하느라 대화를 멈추거나 새 발화를 만들지 않음
     description: "Save a useful English phrase the learner practiced, for later review.",
     parameters: {
       type: "OBJECT",
@@ -70,6 +81,7 @@ export const TOOLS = [
   },
   {
     name: "end_session",
+    behavior: "NON_BLOCKING",
     description: "End the lesson. Call only after you have said goodbye.",
   },
 ];
